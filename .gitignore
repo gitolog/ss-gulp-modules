@@ -1,8 +1,9 @@
 
-/node-modules
+/node_modules
 /lib
 /src
 /www
+/CVS
 .cvsignore
 deploy.properties
 *.iml

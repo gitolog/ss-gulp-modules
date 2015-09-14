@@ -1,86 +1,113 @@
-var gulp = require('gulp'),
+var basedir = 'www',
     del = require('del'),
-    concat = require('gulp-concat'),
-    autoprefixer = require('gulp-autoprefixer'),
-    minifyCss = require('gulp-minify-css'),
-    minifyHTML = require('gulp-minify-html'),
-    uglify = require("gulp-uglify"),
-    imagemin = require('gulp-imagemin'),
-    less = require('gulp-less'),
-    rename = require('gulp-rename'),
-    notify = require('gulp-notify');
+    gulp = require('gulp'),
+    gulpLoadPlugins = require('gulp-load-plugins'),
+    plugins = gulpLoadPlugins(),
+    runSequence = require('run-sequence');
 
-var paths = {
-  src: { //Пути откуда брать исходники
-      js: 'www/javascript/src',//В стилях и скриптах нам понадобятся только main файлы
-      css: 'www/css/src',
-      img: 'www/images/src',
-      fonts: 'www/fonts'
+var path = {
+  src: { // Пути откуда брать исходники
+      js: basedir+ '/javascript/src',
+      css: basedir+ '/css/src',
+      img: basedir+ '/images/src',
+      fonts: basedir+ '/fonts'
   },
-  out: { //Тут мы укажем куда складывать готовые после сборки файлы
-      js: 'www/javascript',
-      css: 'www/css',
-      img: 'www/images',
-      fonts: 'www/fonts'
+  out: { // Тут мы укажем куда складывать
+      js: basedir+ '/javascript',
+      css: basedir+ '/css',
+      img: basedir+ '/images',
+      fonts: basedir+ '/fonts'
   }
 };
 
-// ЗАДАЧИ
+//--------------------------------------------------------------
+//    TASKS
+//--------------------------------------------------------------
 
-// Styles
-gulp.task('styles', function(){
-  gulp.src(paths.src.css + '/*.css')
-    .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'))
-    .pipe(concat('style.css'))
-    .pipe(gulp.dest(paths.out.css))
-    .pipe(notify({ message: 'Styles compiled' }))
-    .pipe(minifyCss())
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest(paths.out.css))
-    .pipe(notify({ message: 'Styles minified' }));
+// Compile CSS
+gulp.task('compile:css', function(){
+  return gulp.src( path.src.css + '/*.css' )
+    .pipe(plugins.autoprefixer({
+      browsers: [
+          '> 1%',
+          'last 2 versions',
+          'firefox >= 4',
+          'safari 7',
+          'safari 8',
+          'IE 8',
+          'IE 9',
+          'IE 10',
+          'IE 11'
+      ], cascade: false })
+    )
+    .pipe(plugins.concat('style.css'))
+    .pipe(gulp.dest( path.out.css ))
+    .pipe(plugins.livereload());
 });
 
-// Scripts
-gulp.task('scripts', function() {
-  gulp.src(paths.src.js + '/**/*.js')
-    .pipe(concat('common.js'))
-    .pipe(gulp.dest(paths.out.js))
-    .pipe(notify({ message: 'Scripts compiled' }))
-    .pipe(uglify())
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(gulp.dest(paths.out.js))
-    .pipe(notify({ message: 'Scripts minified' }));
+// Minify CSS
+gulp.task('minify:css', function() {
+  return gulp.src([
+        path.out.css + '/*.css',
+        '!'+path.out.css+'/*.min.css',
+        '!'+path.out.css+'/*-min.css'
+    ])
+    .pipe(plugins.minifyCss())
+    .pipe(plugins.rename({ suffix: '.min' }))
+    .pipe(gulp.dest( path.out.css ));
 });
 
-// Images
-gulp.task('images', function() {
-  gulp.src(paths.src.img + '/**/*.{jpg,gif,png}')
-    .pipe(imagemin( { } ))
-    .pipe(gulp.dest(paths.out.img))
-    .pipe(notify({ message: 'Images minified' }));
+
+// Compile JS
+gulp.task('compile:js', function() {
+  return gulp.src( path.src.js + '/*.js' )
+    .pipe(plugins.concat('common.js'))
+    .pipe(gulp.dest( path.out.js ))
+    .pipe(plugins.livereload());
+});
+
+// Minify JS
+gulp.task('minify:js', function() {
+  return gulp.src(path.out.js + '/common.js')
+    .pipe(plugins.uglify())
+    .pipe(plugins.rename({ suffix: '.min' }))
+    .pipe(gulp.dest( path.out.js ));
+});
+
+// Minify pictures
+gulp.task('minify:images', function() {
+  return gulp.src( path.src.img + '/**/*.{jpg,gif,png}' )
+    .pipe(plugins.imagemin( { } ))
+    .pipe(gulp.dest(path.out.img));
 });
 
 // Clean
 gulp.task('clean', function () {
   return del([
     // Delete CSS
-    paths.out.css + '/style.css',
-    paths.out.css + '/style.min.css',
+    path.out.css + '/style.css',
+    path.out.css + '/style.min.css',
     // Delete JS
-    paths.out.js + '/common.js',
-    paths.out.js + '/common.min.js'
+    path.out.js + '/common.js',
+    path.out.js + '/common.min.js'
   ]);
 });
 
-// Build
-gulp.task('build', ['clean'], function() {
-    return gulp.start('styles', 'scripts', 'images');
+// Builder
+gulp.task('build', function(cb) {
+  // runSequence позволяет запускать задачи по порядку
+  runSequence('clean', // 1
+    ['compile:css', 'compile:js'], // 2 (таски выполнятся впараллель)
+    ['minify:css', 'minify:js', 'minify:images'] // 3
+  );
 });
 
-// По умолчанию
-gulp.task('default', ['clean'], function(){
-  gulp.start(['styles', 'scripts', 'images']);
 
-  gulp.watch(paths.src.css + '/*.css', ['styles']); // Компилим изменения CSS на лету
-  gulp.watch(paths.out.js + '/**/*.js', ['scripts']); // Компилим изменения JS на лету
+// Watcher
+gulp.task('default', ['compile:css', 'compile:js'], function(){
+  plugins.livereload.listen();
+  // Оповещаем Livereload об изменениях в шаблонах
+  gulp.watch(basedir+'/**/*.ftl', function(file){ plugins.livereload.changed(file.basename) });
+  gulp.watch( path.src.css + '/*.css', ['compile:css'] );
+  gulp.watch( path.out.js + '/**/*.js', ['compile:js'] );
 });

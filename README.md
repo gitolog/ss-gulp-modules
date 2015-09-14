@@ -52,21 +52,33 @@
 
 #### Сборка всех CSS
 ```
-> gulp styles
+> gulp compile:css
 ```
 Будут взяты все файлы LESS и CSS из папки **_/www/css/src_**, скомпилированы, объединены в один файл и помещены в **_/www/css/style.css_**.
 Также будет подготовлена сжатая версия в **_/www/css/style.min.css_**
 
 #### Сборка JavaScript
 ```
-> gulp scripts
+> gulp compile:js
 ```
 Будут взяты все JS-файлы из папки **_/www/javascript/src_**, скомпилированы, объединены в один файл и помещены в **_/www/javascript/common.js_**.
-Также будет подготовлена сжатая версия в **_/www/javascript/common.min.js_**
+
+#### Минификация CSS
+```
+> gulp minify:css
+```
+Все файлы **_*.css_** в папке **_/www/css_** будут сжаты и сохранены в эту же папку под именами **_*.min.css_**.
+Уже сжатые файлы обрабатываться не будут.
+
+#### Минификация JavaScript
+```
+> gulp minify:js
+```
+Файл **_common.js_** в папке **_/www/javascript_** будет сжат и сохранен в эту же папку под именами **_common.min.js_**
 
 #### Сборка картинок
 ```
-> gulp images
+> gulp minify:images
 ```
 Будут взяты все картинки (JPG, GIF, PNG) из папки **_/www/images/src_**, минифицированы и помещены в **_/www/images_**.
 
@@ -80,5 +92,12 @@
 ```
 > gulp
 ```
-Будет удалена предыдущая сборка (CSS и JS), выполнится новая компиляция стилей, скриптов и картинок.
+Будет удалена предыдущая сборка, выполнится новая компиляция стилей, скриптов и картинок.
 При внесении изменений в стили или скрипты будет происходить их компиляция "на лету".
+
+Также будет происходить автоматический reload страницы. Для этого необходимо установить плагин LiveReload для вашего браузера.
+
+##### Live reload
+
+[Плагин для Google Chrome] (https://chrome.google.com/webstore/detail/livereload/jnihajbhpnppcggbcgedagnkighmdlei)
+[Плагин для Mozilla Firefox] (https://github.com/downloads/siasia/livereload-extensions/LiveReload-2.0.9.xpi)
