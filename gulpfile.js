@@ -1,3 +1,5 @@
+'use strict';
+
 var basedir = 'www',
     del = require('del'),
     gulp = require('gulp'),
@@ -6,13 +8,13 @@ var basedir = 'www',
     runSequence = require('run-sequence');
 
 var path = {
-  src: { // Пути откуда брать исходники
+  src: { // ГЏГіГІГЁ Г®ГІГЄГіГ¤Г  ГЎГ°Г ГІГј ГЁГ±ГµГ®Г¤Г­ГЁГЄГЁ
       js: basedir+ '/javascript/src',
       css: basedir+ '/css/src',
       img: basedir+ '/images/src',
       fonts: basedir+ '/fonts'
   },
-  out: { // Тут мы укажем куда складывать
+  out: { // Г’ГіГІ Г¬Г» ГіГЄГ Г¦ГҐГ¬ ГЄГіГ¤Г  Г±ГЄГ«Г Г¤Г»ГўГ ГІГј
       js: basedir+ '/javascript',
       css: basedir+ '/css',
       img: basedir+ '/images',
@@ -95,9 +97,9 @@ gulp.task('clean', function () {
 
 // Builder
 gulp.task('build', function(cb) {
-  // runSequence позволяет запускать задачи по порядку
+  // runSequence ГЇГ®Г§ГўГ®Г«ГїГҐГІ Г§Г ГЇГіГ±ГЄГ ГІГј Г§Г Г¤Г Г·ГЁ ГЇГ® ГЇГ®Г°ГїГ¤ГЄГі
   runSequence('clean', // 1
-    ['compile:css', 'compile:js'], // 2 (таски выполнятся впараллель)
+    ['compile:css', 'compile:js'], // 2 (ГІГ Г±ГЄГЁ ГўГ»ГЇГ®Г«Г­ГїГІГ±Гї ГўГЇГ Г°Г Г«Г«ГҐГ«Гј)
     ['minify:css', 'minify:js', 'minify:images'] // 3
   );
 });
@@ -106,7 +108,7 @@ gulp.task('build', function(cb) {
 // Watcher
 gulp.task('default', ['compile:css', 'compile:js'], function(){
   plugins.livereload.listen();
-  // Оповещаем Livereload об изменениях в шаблонах
+  // ГЋГЇГ®ГўГҐГ№Г ГҐГ¬ Livereload Г®ГЎ ГЁГ§Г¬ГҐГ­ГҐГ­ГЁГїГµ Гў ГёГ ГЎГ«Г®Г­Г Гµ
   gulp.watch(basedir+'/**/*.ftl', function(file){ plugins.livereload.changed(file.basename) });
   gulp.watch( path.src.css + '/*.css', ['compile:css'] );
   gulp.watch( path.out.js + '/**/*.js', ['compile:js'] );
