@@ -1,3 +1,5 @@
+'use strict';
+
 var basedir = 'www',
     del = require('del'),
     gulp = require('gulp'),
