@@ -3,6 +3,7 @@ var basedir = 'www',
     gulp = require('gulp'),
     gulpLoadPlugins = require('gulp-load-plugins'),
     plugins = gulpLoadPlugins(),
+    imageminPngquant = require('imagemin-pngquant'),
     runSequence = require('run-sequence');
 
 var path = {
@@ -45,6 +46,17 @@ gulp.task('compile:css', function(){
     .pipe(plugins.livereload());
 });
 
+// Concat vendor CSS
+gulp.task('compile-vendor:css', function() {
+  return gulp.src([
+      path.src.css + '/vendor/**/*.css',
+      '!'+path.src.css+'/vendor/**/*.min.css',
+      '!'+path.src.css+'/vendor/**/*-min.css'
+    ])
+    .pipe(plugins.concat('vendor.css'))
+    .pipe(gulp.dest( path.out.css ));
+});
+
 // Minify CSS
 gulp.task('minify:css', function() {
   return gulp.src([
@@ -57,27 +69,47 @@ gulp.task('minify:css', function() {
     .pipe(gulp.dest( path.out.css ));
 });
 
-
 // Compile JS
 gulp.task('compile:js', function() {
-  return gulp.src( path.src.js + '/*.js' )
+  return gulp.src( [
+      path.src.js + '/*.js'
+    ])
     .pipe(plugins.concat('common.js'))
+    .pipe(gulp.dest( path.out.js ))
+    .pipe(plugins.livereload());
+});
+
+// Concat vendor JS
+gulp.task('compile-vendor:js', function() {
+  return gulp.src( [
+      path.src.js + '/vendor/**/*.js',
+      '!'+path.src.js + '/vendor/jquery/jquery-*.js', // Exclude Jquery
+      '!'+path.src.js + '/vendor/material/*.js', // Exclude Material
+    ])
+    .pipe(plugins.concat('vendor.js'))
     .pipe(gulp.dest( path.out.js ))
     .pipe(plugins.livereload());
 });
 
 // Minify JS
 gulp.task('minify:js', function() {
-  return gulp.src(path.out.js + '/common.js')
+  return gulp.src([
+      path.out.js + '/common.js',
+      path.out.js + '/vendor.js'
+    ])
     .pipe(plugins.uglify())
     .pipe(plugins.rename({ suffix: '.min' }))
+    .pipe(plugins.convertEncoding({to: 'cp1251'}))
     .pipe(gulp.dest( path.out.js ));
 });
 
 // Minify pictures
 gulp.task('minify:images', function() {
   return gulp.src( path.src.img + '/**/*.{jpg,gif,png}' )
-    .pipe(plugins.imagemin( { } ))
+    .pipe(plugins.imagemin({
+      progressive: true,
+      use: [imageminPngquant({ quality: '65-80', speed: 4 })]
+    }))
     .pipe(gulp.dest(path.out.img));
 });
 
@@ -87,6 +119,8 @@ gulp.task('clean', function () {
     // Delete CSS
     path.out.css + '/style.css',
     path.out.css + '/style.min.css',
+    path.out.css + '/vendor.css',
+    path.out.css + '/vendor.min.css',
     // Delete JS
     path.out.js + '/common.js',
     path.out.js + '/common.min.js'
@@ -97,17 +131,17 @@ gulp.task('clean', function () {
 gulp.task('build', function(cb) {
   // runSequence позволяет запускать задачи по порядку
   runSequence('clean', // 1
-    ['compile:css', 'compile:js'], // 2 (таски выполнятся впараллель)
+    ['compile:css', 'compile-vendor:css', 'compile:js', 'compile-vendor:js'], // 2 (таски выполнятся впараллель)
     ['minify:css', 'minify:js', 'minify:images'] // 3
   );
 });
 
 
 // Watcher
-gulp.task('default', ['compile:css', 'compile:js'], function(){
+gulp.task('default', function(){
   plugins.livereload.listen();
   // Оповещаем Livereload об изменениях в шаблонах
-  gulp.watch(basedir+'/**/*.ftl', function(file){ plugins.livereload.changed(file.basename) });
+  gulp.watch(basedir+'/**/*.ftl', function(file){ plugins.livereload.changed("file") });
   gulp.watch( path.src.css + '/*.css', ['compile:css'] );
   gulp.watch( path.out.js + '/**/*.js', ['compile:js'] );
 });
