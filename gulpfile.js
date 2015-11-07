@@ -30,6 +30,7 @@ var path = {
 // Compile CSS
 gulp.task('compile:css', function(){
   return gulp.src( path.src.css + '/*.css' )
+    .pipe(plugins.convertEncoding({to: 'UTF-8'}))
     .pipe(plugins.autoprefixer({
       browsers: [
           '> 1%',
@@ -44,6 +45,7 @@ gulp.task('compile:css', function(){
       ], cascade: false })
     )
     .pipe(plugins.concat('style.css'))
+    .pipe(plugins.convertEncoding({to: 'Windows-1251'}))
     .pipe(gulp.dest( path.out.css ))
     .pipe(plugins.livereload());
 });
@@ -101,7 +103,6 @@ gulp.task('minify:js', function() {
     ])
     .pipe(plugins.uglify())
     .pipe(plugins.rename({ suffix: '.min' }))
-    .pipe(plugins.convertEncoding({to: 'cp1251'}))
     .pipe(gulp.dest( path.out.js ));
 });
 
